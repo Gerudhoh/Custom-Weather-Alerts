@@ -22,6 +22,7 @@ def get_weather():
 
 def will_rain_tonight():
     weather = get_weather()
+    print(weather)
     main_weather = weather['current']['weather'][0]['main']
     if main_weather.casefold() == "rain":
         return True
