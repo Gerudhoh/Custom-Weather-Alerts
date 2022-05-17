@@ -1,8 +1,9 @@
 import os
-import requests, json
+import requests, json, time
 from dotenv import load_dotenv
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail, Content, To, Email
+from datetime import date, timedelta
 
 load_dotenv()
 
@@ -48,21 +49,46 @@ def will_need_ac(weather):
     
     return True
 
+def ac_already_on():
+    yesterday_dt = date.today() - timedelta(days = 1)
+    yesterday_unix = int(time.mktime(yesterday_dt.timetuple()))
+    
+    LATITUDE = "43.511871"
+    LONGITUDE = "-80.192574"
+    ow = os.environ['OPENWEATHER_API_KEY']
+    base_url = "http://api.openweathermap.org/data/2.5/onecall/timemachine?"
+    lat = "lat=" + LATITUDE
+    lon = "&lon=" + LONGITUDE
+    dt = "&dt=" + str(yesterday_unix)
+    api = "&appid=" + ow
+    units = "&units=metric"
+    req = base_url + lat + lon + dt + api + units
 
-def get_email_content(will_rain_tn, need_ac):
-    if will_rain_tn and need_ac:
-        return Content("text/plain", "It's likely to rain tonight! We should probably bring in the cushions. Also it'll be stupid hot over the next few days, so let's turn on the A/C")
-    elif will_rain_tn and not need_ac:
-        return Content("text/plain", "It's likely to rain tonight! We should probably bring in the cushions")
-    else:
-       return Content("text/plain", "It'll be stupid hot over the next few days, let's turn on the A/C")
+    response = requests.get(req)
+    yesterday_weather = response.json()
+    return will_need_ac(yesterday_weather)
 
 
-def send_email(will_rain_tn, need_ac):
+def get_email_content(will_rain_tn, turn_ac_on, turn_ac_off):
+    message = ""
+
+    if will_rain_tn:
+        message += "It's likely to rain tonight! We should probably bring in the cushions. "
+    
+    if turn_ac_on:
+        message += "It'll be stupid hot over the next few days/nights, we might want to turn on the A/C. "
+    
+    if turn_ac_off:
+        message += "It's probably safe to turn off the A/C. "
+    
+    return Content("text/plain", message)
+
+
+def send_email(will_rain_tn, turn_ac_on, turn_ac_off):
     from_email = Email('gerudhoh+weather@gmail.com')
     to_emails = [To('gerudhoh@gmail.com'), To('choh@rogers.com'), To('paolahoh@rogers.com'), To('barbdowsley@yahoo.ca')]
     subject = 'Semi-Nightly Weather Report'
-    content = get_email_content(will_rain_tn, need_ac)
+    content = get_email_content(will_rain_tn, turn_ac_on, turn_ac_off)
     email = Mail(from_email, to_emails, subject, content)
 
     sg = SendGridAPIClient(os.environ['SENDGRID_API_KEY'])
@@ -73,10 +99,17 @@ def send_email(will_rain_tn, need_ac):
     
 
 weather = get_weather()
-will_rain_tn = will_rain_tonight(weather)
-need_ac = will_need_ac(weather)
 
-if will_rain_tn == False and need_ac == False:
+# Get Cushions Alert
+will_rain_tn = will_rain_tonight(weather)
+
+# Get A/C Alert
+need_ac = will_need_ac(weather)
+ac_is_on = ac_already_on()
+turn_ac_on = need_ac and not ac_is_on
+turn_ac_off = not need_ac and ac_is_on
+
+if will_rain_tn == False and turn_ac_on == False and turn_ac_off == False:
     print("No alert needed!")
 else:
-    send_email(will_rain_tn, need_ac)
+    send_email(will_rain_tn, turn_ac_on, turn_ac_off)
