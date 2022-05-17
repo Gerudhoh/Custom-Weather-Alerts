@@ -27,7 +27,7 @@ jobs:
           python-version: '3.8.5' # install the python version needed
           
       - name: install python packages
-        run: install.sh
+        run: bash install.sh
         
       - name:  execute py script
         env: 
