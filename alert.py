@@ -10,7 +10,7 @@ load_dotenv()
 def get_weather():
     LATITUDE = "43.511871"
     LONGITUDE = "-80.192574"
-    ow = os.getenv('OPENWEATHER_API_KEY')
+    ow = os.environ.get('OPENWEATHER_API_KEY')
     base_url = "http://api.openweathermap.org/data/2.5/onecall?"
     lat = "lat=" + LATITUDE
     lon = "&lon=" + LONGITUDE
@@ -43,7 +43,7 @@ def send_email():
     subject='Bring the cushions in!',
     content = Content("text/plain", "It's likely to rain tonight! We should probably bring in the cushions"))
 
-    sg = SendGridAPIClient(os.getenv('SENDGRID_API_KEY'))
+    sg = SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
     response = sg.send(message)
     print(response.status_code)
     print(response.body)
