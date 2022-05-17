@@ -34,9 +34,6 @@ def will_rain(hourly_weather):
     return False
 
 def will_need_ac(weather):
-    MAX_DEW_POINT = 55
-    WIND_DEG_MIN = 258
-    WIND_DEG_MAX = 360
     TEMP_MAX = 25
 
     if int(weather['current']['feels_like']) < TEMP_MAX:
