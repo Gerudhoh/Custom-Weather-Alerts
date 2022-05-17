@@ -30,7 +30,8 @@ def will_rain_tonight():
 def will_rain(hourly_weather):
     for i in range(0, 10):
         hour_forcast = hourly_weather[i]
-        print(pop)
+        pop = hour_forcast['pop']
+        # print(pop)
         if pop >= 0.5:
             return True
     return False
