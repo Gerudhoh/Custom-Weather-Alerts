@@ -55,7 +55,7 @@ def get_email_content(will_rain_tn, need_ac):
     elif will_rain_tn and not need_ac:
         return Content("text/plain", "It's likely to rain tonight! We should probably bring in the cushions")
     else:
-       return Content("text/plain", "Hello parents! Testing my nightly weather alert system")
+       return Content("text/plain", "It'll be stupid hot over the next few days, let's turn on the A/C")
 
 
 def send_email(will_rain_tn, need_ac):
@@ -76,4 +76,7 @@ weather = get_weather()
 will_rain_tn = will_rain_tonight(weather)
 need_ac = will_need_ac(weather)
 
-send_email(will_rain_tn, need_ac)
+if will_rain_tn == False and need_ac == False:
+    print("No alert needed!")
+else:
+    send_email(will_rain_tn, need_ac)
