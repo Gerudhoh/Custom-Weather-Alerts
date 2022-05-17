@@ -1,21 +1,21 @@
 import os
-import requests, json
+import requests, json, time
 from dotenv import load_dotenv
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail, Content, To, Email
+from datetime import date, timedelta
 
 load_dotenv()
 
+LATITUDE = "43.511871"
+LONGITUDE = "-80.192574"
+# OW_KEY = os.environ['OPENWEATHER_API_KEY']
+OW_KEY = os.getenv('OPENWEATHER_API_KEY')
+OW_BASE_URI = "https://api.openweathermap.org/data/3.0/onecall"
+EXCLUDE = "minutely"
+
 def get_weather():
-    LATITUDE = "43.511871"
-    LONGITUDE = "-80.192574"
-    ow = os.environ['OPENWEATHER_API_KEY']
-    base_url = "http://api.openweathermap.org/data/2.5/onecall?"
-    lat = "lat=" + LATITUDE
-    lon = "&lon=" + LONGITUDE
-    api = "&appid=" + ow
-    units = "&units=metric"
-    req = base_url + lat + lon + api + units
+    req = "{uri}?lat={lat}&lon={lon}&exclude={part}&appid={key}".format(uri=OW_BASE_URI, lat=LATITUDE, lon=LONGITUDE,part=EXCLUDE,key=OW_KEY)
     response = requests.get(req)
     return response.json()
 
@@ -48,6 +48,14 @@ def will_need_ac(weather):
     
     return True
 
+def ac_already_on():
+    yesterday_dt = date.today() - timedelta(days = 1)
+    yesterday_unix = int(time.mktime(yesterday_dt.timetuple()))
+    print("Yesterday was: ", yesterday_unix)
+    req = "{url}/timemachine?lat={lat}&lon={lon}&dt={time}&appid={key}".format(url=OW_BASE_URI, lat=LATITUDE, lon=LONGITUDE, time=yesterday_unix, key=OW_KEY)
+    response = requests.get(req)
+    print(req)
+
 
 def get_email_content(will_rain_tn, need_ac):
     if will_rain_tn and need_ac:
@@ -73,10 +81,12 @@ def send_email(will_rain_tn, need_ac):
     
 
 weather = get_weather()
-will_rain_tn = will_rain_tonight(weather)
-need_ac = will_need_ac(weather)
+print(weather)
+# will_rain_tn = will_rain_tonight(weather)
+# need_ac = will_need_ac(weather) and not ac_already_on()
+ac_already_on()
 
-if will_rain_tn == False and need_ac == False:
-    print("No alert needed!")
-else:
-    send_email(will_rain_tn, need_ac)
+# if will_rain_tn == False and need_ac == False:
+#     print("No alert needed!")
+# else:
+#     send_email(will_rain_tn, need_ac)
