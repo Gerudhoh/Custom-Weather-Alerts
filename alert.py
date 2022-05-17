@@ -60,7 +60,7 @@ def get_email_content(will_rain_tn, need_ac):
 
 def send_email(will_rain_tn, need_ac):
     from_email = Email('gerudhoh+weather@gmail.com')
-    to_emails = [To('gerudhoh@gmail.com'), To('choh@rogers.com'), To('paolahoh@rogers.com')]
+    to_emails = [To('gerudhoh@gmail.com'), To('choh@rogers.com'), To('paolahoh@rogers.com'), To('barbdowsley@yahoo.ca')]
     subject = 'Semi-Nightly Weather Report'
     content = get_email_content(will_rain_tn, need_ac)
     email = Mail(from_email, to_emails, subject, content)
