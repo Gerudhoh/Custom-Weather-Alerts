@@ -2,15 +2,14 @@ import os
 import requests, json
 from dotenv import load_dotenv
 from sendgrid import SendGridAPIClient
-from sendgrid.helpers.mail import Mail, Content
-from datetime import datetime
+from sendgrid.helpers.mail import Mail, Content, To, Email
 
 load_dotenv()
 
 def get_weather():
     LATITUDE = "43.511871"
     LONGITUDE = "-80.192574"
-    ow = os.environ.get('OPENWEATHER_API_KEY')
+    ow = os.environ['OPENWEATHER_API_KEY']
     base_url = "http://api.openweathermap.org/data/2.5/onecall?"
     lat = "lat=" + LATITUDE
     lon = "&lon=" + LONGITUDE
@@ -20,8 +19,7 @@ def get_weather():
     response = requests.get(req)
     return response.json()
 
-def will_rain_tonight():
-    weather = get_weather()
+def will_rain_tonight(weather):
     main_weather = weather['current']['weather'][0]['main']
     if main_weather.casefold() == "rain":
         return True
@@ -31,25 +29,56 @@ def will_rain(hourly_weather):
     for i in range(0, 10):
         hour_forcast = hourly_weather[i]
         pop = hour_forcast['pop']
-        # print(pop)
         if pop >= 0.5:
             return True
     return False
 
-def send_email():
-    message = Mail(
-    from_email='gerudhoh+weather@gmail.com',
-    to_emails='gerudhoh@gmail.com',
-    subject='Bring the cushions in!',
-    content = Content("text/plain", "It's likely to rain tonight! We should probably bring in the cushions"))
+def will_need_ac(weather):
+    MAX_DEW_POINT = 55
+    WIND_DEG_MIN = 258
+    WIND_DEG_MAX = 360
+    TEMP_MAX = 25
 
-    sg = SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
-    response = sg.send(message)
+    if int(weather['current']['feels_like']) < TEMP_MAX:
+        return False
+    
+    daily_weather = weather['daily']
+    for i in range(0, 3):
+        night_feel = daily_weather[i]['feels_like']['night']
+        # If we only have to suffer the heat for one or two nights, we don't need AC
+        if int(night_feel) < TEMP_MAX:
+            return False
+    
+    return True
+
+
+def get_email_content(will_rain_tn, need_ac):
+    if will_rain_tn and need_ac:
+        return Content("text/plain", "It's likely to rain tonight! We should probably bring in the cushions. Also it'll be stupid hot over the next few days, so let's turn on the A/C")
+    elif will_rain_tn and not need_ac:
+        return Content("text/plain", "It's likely to rain tonight! We should probably bring in the cushions")
+    else:
+       return Content("text/plain", "It'll be stupid hot over the next few days, let's turn on the A/C")
+
+
+def send_email(will_rain_tn, need_ac):
+    from_email = Email('gerudhoh+weather@gmail.com')
+    to_emails = To('gerudhoh@gmail.com')
+    subject = 'Semi-Nightly Weather Report'
+    content = get_email_content(will_rain_tn, need_ac)
+    email = Mail(from_email, to_emails, subject, content)
+
+    sg = SendGridAPIClient(os.environ['SENDGRID_API_KEY'])
+    response = sg.send(email)
     print(response.status_code)
     print(response.body)
     print(response.headers)
     
-if will_rain_tonight() == True:
-    send_email()
+
+weather = get_weather()
+will_rain_tn = will_rain_tonight(weather)
+need_ac = will_need_ac(weather)
+if will_rain_tn == False and need_ac == False:
+    print("No alert needed!")
 else:
-    print("No rain!")
+    send_email(will_rain_tn, need_ac)
