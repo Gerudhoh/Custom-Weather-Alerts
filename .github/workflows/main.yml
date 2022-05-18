@@ -4,7 +4,7 @@ name: Run Weather Alert
 on:
   schedule:
     # 10pm EST from May through September
-    - cron: '0 2 * 5-9 *'
+    - cron: '0 1 * 5-9 *'
     
   workflow_dispatch:
 
