@@ -103,13 +103,13 @@ weather = get_weather()
 # Get Cushions Alert
 will_rain_tn = will_rain_tonight(weather)
 
-# Get A/C Alert
-need_ac = will_need_ac(weather)
-ac_is_on = ac_already_on()
-turn_ac_on = need_ac and not ac_is_on
-turn_ac_off = not need_ac and ac_is_on
+# # Get A/C Alert
+# need_ac = will_need_ac(weather)
+# ac_is_on = ac_already_on()
+# turn_ac_on = need_ac and not ac_is_on
+# turn_ac_off = not need_ac and ac_is_on
 
-if will_rain_tn == False and turn_ac_on == False and turn_ac_off == False:
+if will_rain_tn == False: #and turn_ac_on == False and turn_ac_off == False:
     print("No alert needed!")
 else:
     send_email(will_rain_tn, turn_ac_on, turn_ac_off)
