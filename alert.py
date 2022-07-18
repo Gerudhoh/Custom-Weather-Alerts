@@ -109,7 +109,10 @@ will_rain_tn = will_rain_tonight(weather)
 # turn_ac_on = need_ac and not ac_is_on
 # turn_ac_off = not need_ac and ac_is_on
 
-if will_rain_tn == False: #and turn_ac_on == False and turn_ac_off == False:
+turn_ac_on = False
+turn_ac_off = False
+
+if will_rain_tn == False and turn_ac_on == False and turn_ac_off == False:
     print("No alert needed!")
 else:
     send_email(will_rain_tn, turn_ac_on, turn_ac_off)
